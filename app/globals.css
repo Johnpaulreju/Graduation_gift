@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-midnight: #0F172A;
+  --color-gold: #D4AF37;
+  --color-light: #F8FAFC;
+  --font-serif: "Playfair Display", Georgia, serif;
+}
+
+body {
+  background: #0F172A;
+  color: #F8FAFC;
+  font-family: Arial, Helvetica, sans-serif;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Galaxy background helpers */
+.galaxy-bg {
+  background:
+    radial-gradient(1200px 800px at 20% 20%, rgba(124, 58, 237, 0.20), transparent 60%),
+    radial-gradient(1000px 700px at 80% 30%, rgba(34, 211, 238, 0.16), transparent 55%),
+    radial-gradient(900px 700px at 55% 75%, rgba(255, 200, 120, 0.08), transparent 55%),
+    radial-gradient(1200px 900px at 50% 50%, rgba(11, 16, 38, 1), rgba(5, 6, 15, 1));
+}
+
+.galaxy-vignette::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.55) 85%);
+  filter: blur(10px);
+}
+
+@keyframes bloomGlow {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* ── Mobile global fixes ── */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Safe area insets for notch/home-indicator devices */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Reduced motion — disable non-essential animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  canvas {
+    display: none;
+  }
+}
+
+/* Nav arrow nudge animation */
+@keyframes navNudge {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(4px); }
+  40% { transform: translateX(-2px); }
+  60% { transform: translateX(3px); }
+  80% { transform: translateX(0); }
+}
+
+.galaxy-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+}

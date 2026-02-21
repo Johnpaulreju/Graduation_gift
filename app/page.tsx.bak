@@ -1,0 +1,186 @@
+"use client";
+
+import { useRef, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import ChapterProgress from "@/components/ChapterProgress";
+import WarpTransition from "@/components/WarpTransition";
+
+export default function LandingPage() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const envelopeRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [warping, setWarping] = useState(false);
+  const [envelopeOpen, setEnvelopeOpen] = useState(false);
+
+  // Stable random stars (avoid hydration mismatch)
+  const bgStars = useMemo(
+    () =>
+      Array.from({ length: 60 }, (_, i) => ({
+        id: i,
+        left: `${(((i * 37 + 13) % 100))}%`,
+        top: `${(((i * 53 + 7) % 100))}%`,
+        opacity: 0.3 + ((i * 17) % 7) / 10,
+        dur: 2 + ((i * 13) % 30) / 10,
+        delay: ((i * 23) % 30) / 10,
+      })),
+    []
+  );
+
+  useGSAP(
+    () => {
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+      tl.from(".landing-heading", {
+        y: 30,
+        opacity: 0,
+        duration: 1.2,
+      });
+
+      tl.from(
+        ".landing-sub",
+        { y: 20, opacity: 0, duration: 1 },
+        "-=0.6"
+      );
+
+      tl.from(
+        ".envelope-card",
+        { y: 40, opacity: 0, scale: 0.9, duration: 1, ease: "back.out(1.4)" },
+        "-=0.5"
+      );
+
+      tl.from(
+        ".landing-cta",
+        { y: 15, opacity: 0, duration: 0.8 },
+        "-=0.4"
+      );
+    },
+    { scope: containerRef }
+  );
+
+  const handleOpen = useCallback(() => {
+    if (envelopeOpen) return;
+    setEnvelopeOpen(true);
+
+    const el = envelopeRef.current;
+    if (!el) return;
+
+    const tl = gsap.timeline({
+      onComplete: () => setWarping(true),
+    });
+
+    tl.to(el, {
+      scale: 1.15,
+      rotateZ: -2,
+      duration: 0.4,
+      ease: "power2.out",
+    });
+
+    tl.to(el, {
+      scale: 1.3,
+      rotateZ: 0,
+      opacity: 0,
+      y: -30,
+      duration: 0.5,
+      ease: "power2.in",
+    });
+
+    tl.to(
+      ".landing-heading, .landing-sub, .landing-cta",
+      { opacity: 0, y: -20, duration: 0.3, stagger: 0.05 },
+      "-=0.4"
+    );
+  }, [envelopeOpen]);
+
+  const handleWarpComplete = useCallback(() => {
+    router.push("/memories");
+  }, [router]);
+
+  return (
+    <>
+      <div
+        ref={containerRef}
+        className="galaxy-bg galaxy-vignette galaxy-grain relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-6"
+      >
+        <ChapterProgress current={1} />
+
+        {/* Background stars */}
+        <div className="pointer-events-none absolute inset-0 z-0 opacity-30">
+          {bgStars.map((s) => (
+            <div
+              key={s.id}
+              className="absolute h-px w-px rounded-full bg-white"
+              style={{
+                left: s.left,
+                top: s.top,
+                opacity: s.opacity,
+                animation: `twinkle ${s.dur}s ease-in-out infinite`,
+                animationDelay: `${s.delay}s`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center px-4 text-center">
+          <h1 className="landing-heading font-[family-name:var(--font-playfair)] text-3xl leading-snug tracking-wide text-[#EDEBFF] sm:text-4xl md:text-5xl">
+            For you, on your graduation.
+          </h1>
+
+          <p className="landing-sub mt-3 text-base text-[#A7B0D6] sm:mt-4 sm:text-lg">
+            I saved a few stars for you.
+          </p>
+
+          {/* Envelope — large tap target */}
+          <div
+            ref={envelopeRef}
+            className="envelope-card group mt-10 cursor-pointer active:scale-95 sm:mt-12"
+            onClick={handleOpen}
+          >
+            <div className="relative rounded-2xl border border-[#D4AF37]/30 bg-white/[0.04] px-10 py-8 shadow-[0_0_60px_rgba(212,175,55,0.08)] backdrop-blur-sm transition-all duration-500 group-hover:border-[#D4AF37]/60 group-hover:shadow-[0_0_80px_rgba(212,175,55,0.15)] sm:px-12 sm:py-10">
+              {/* Seal */}
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#D4AF37"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              </div>
+
+              <p className="font-[family-name:var(--font-playfair)] text-lg tracking-wide text-[#F8FAFC]/80">
+                A letter, written in stars
+              </p>
+              <p className="mt-1 text-xs tracking-widest text-[#D4AF37]/60">
+                SEALED
+              </p>
+            </div>
+          </div>
+
+          {/* CTA — minimum 48px height for mobile */}
+          <button
+            onClick={handleOpen}
+            className="landing-cta mt-8 min-h-[48px] cursor-pointer rounded-full border border-[#D4AF37] px-8 py-3.5 text-sm uppercase tracking-widest text-[#D4AF37] transition-[background-color,color] duration-300 active:scale-95 hover:bg-[#D4AF37] hover:text-[#0F172A] sm:mt-10"
+          >
+            Open your sky
+          </button>
+        </div>
+
+        <style jsx>{`
+          @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.8); }
+          }
+        `}</style>
+      </div>
+
+      {warping && <WarpTransition onComplete={handleWarpComplete} />}
+    </>
+  );
+}
